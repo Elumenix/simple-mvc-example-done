@@ -90,6 +90,17 @@ const hostPage3 = (req, res) => {
   res.render('page3');
 };
 
+const hostPage4 = async (req, res) => {
+  try {
+    const docs = await Dog.find({}).lean().exec();
+
+    return res.render('page4', { dogs: docs });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ error: 'failed to find dogs' });
+  }
+};
+
 // Get name will return the name of the last added cat.
 const getName = (req, res) => res.json({ name: lastAdded.name });
 const getDogName = (req, res) => res.json({ name: lastDog.name });
@@ -288,7 +299,7 @@ const searchDogName = async (req, res) => {
     doc = await Dog.findOne({ name: req.query.name }).exec(); doc = await Dog.findOneAndUpdate(
       { name: req.query.name },
       { $inc: { age: 1 } }, // increment age by 1
-      { new: true } // option to return the updated document
+      { new: true }, // option to return the updated document
     ).exec();
   } catch (err) {
     // If there is an error, log it and send the user an error message.
@@ -328,6 +339,7 @@ module.exports = {
   page1: hostPage1,
   page2: hostPage2,
   page3: hostPage3,
+  page4: hostPage4,
   getName,
   getDogName,
   setName,
