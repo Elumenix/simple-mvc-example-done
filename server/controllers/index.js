@@ -92,6 +92,7 @@ const hostPage3 = (req, res) => {
 
 // Get name will return the name of the last added cat.
 const getName = (req, res) => res.json({ name: lastAdded.name });
+const getDogName = (req, res) => res.json({ name: lastDog.name });
 
 // Function to create a new cat in the database
 const setName = async (req, res) => {
@@ -277,6 +278,50 @@ const setDogName = async (req, res) => {
   });
 };
 
+const searchDogName = async (req, res) => {
+  if (!req.query.name) {
+    return res.status(400).json({ error: 'Name is required to perform a search' });
+  }
+
+  let doc;
+  try {
+    doc = await Dog.findOne({ name: req.query.name }).exec(); doc = await Dog.findOneAndUpdate(
+      { name: req.query.name },
+      { $inc: { age: 1 } }, // increment age by 1
+      { new: true } // option to return the updated document
+    ).exec();
+  } catch (err) {
+    // If there is an error, log it and send the user an error message.
+    console.log(err);
+    return res.status(500).json({ error: 'Something went wrong' });
+  }
+
+  // If we do not find something that matches our search, doc will be empty.
+  if (!doc) {
+    return res.json({ error: 'No dogs found' });
+  }
+
+  // Otherwise, we got a result and will send it back to the user.
+  return res.json({ name: doc.name, breed: doc.breed, age: doc.age });
+};
+
+const updateLastDog = (req, res) => {
+  lastDog.age++;
+
+  const savePromise = lastDog.save();
+
+  savePromise.then(() => res.json({
+    name: lastDog.name,
+    breed: lastDog.breed,
+    age: lastDog.age,
+  }));
+
+  savePromise.catch((err) => {
+    console.log(err);
+    return res.status(500).json({ error: 'Something went wrong' });
+  });
+};
+
 // export the relevant public controller functions
 module.exports = {
   index: hostIndex,
@@ -284,9 +329,12 @@ module.exports = {
   page2: hostPage2,
   page3: hostPage3,
   getName,
+  getDogName,
   setName,
   setDogName,
   updateLast,
+  updateLastDog,
   searchName,
+  searchDogName,
   notFound,
 };
