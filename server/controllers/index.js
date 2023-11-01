@@ -2,7 +2,7 @@
 const models = require('../models');
 
 // get the Cat model
-const { Cat } = models;
+const { Cat, Dog } = models;
 
 // default fake data so that we have something to work with until we make a real Cat
 const defaultData = {
@@ -10,8 +10,15 @@ const defaultData = {
   bedsOwned: 0,
 };
 
+const defaultDogData = {
+  name: 'unknown',
+  breed: 'unknown',
+  age: 0,
+};
+
 // object for us to keep track of the last Cat we made and dynamically update it sometimes
 let lastAdded = new Cat(defaultData);
+let lastDog = new Dog(defaultDogData);
 
 // Function to handle rendering the index page.
 const hostIndex = (req, res) => {
@@ -241,6 +248,35 @@ const notFound = (req, res) => {
   });
 };
 
+const setDogName = async (req, res) => {
+  if (!req.body.firstname || !req.body.lastname || !req.body.breed || !req.body.age) {
+    // If they are missing data, send back an error.
+    return res.status(400).json({ error: 'firstname, lastname, breed, and age are all required' });
+  }
+
+  const dogData = {
+    name: `${req.body.firstname} ${req.body.lastname}`,
+    breed: `${req.body.breed}`,
+    age: req.body.age,
+  };
+
+  const newDog = new Dog(dogData);
+
+  try {
+    await newDog.save();
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ error: 'failed to create dog' });
+  }
+
+  lastDog = newDog;
+  return res.json({
+    name: lastDog.name,
+    breed: lastDog.breed,
+    age: lastDog.age,
+  });
+};
+
 // export the relevant public controller functions
 module.exports = {
   index: hostIndex,
@@ -249,6 +285,7 @@ module.exports = {
   page3: hostPage3,
   getName,
   setName,
+  setDogName,
   updateLast,
   searchName,
   notFound,
